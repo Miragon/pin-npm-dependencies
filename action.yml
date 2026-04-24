@@ -19,7 +19,11 @@ inputs:
     description: 'Also check peerDependencies (default: false, since ranges are common there)'
     required: false
     default: 'false'
+  check-optional-dependencies:
+    description: 'Also check optionalDependencies (default: true, since these are typically installed)'
+    required: false
+    default: 'true'
 
 runs:
-  using: node20
+  using: node24
   main: src/index.js

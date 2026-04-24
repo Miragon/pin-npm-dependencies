@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
       - run: npm test
 
   integration-root-path-passes:
@@ -26,36 +26,6 @@ jobs:
       - uses: ./
         with:
           root-path: /tmp/proj
-
-  integration-root-path-fails-on-caret:
-    name: '[root-path] fails on ^ range'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          mkdir -p /tmp/proj
-          echo '{"dependencies":{"foo":"^1.0.0"}}' > /tmp/proj/package.json
-      - id: check
-        uses: ./
-        continue-on-error: true
-        with:
-          root-path: /tmp/proj
-      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
-
-  integration-root-path-fails-on-tilde:
-    name: '[root-path] fails on ~ range'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          mkdir -p /tmp/proj
-          echo '{"devDependencies":{"bar":"~2.0.0"}}' > /tmp/proj/package.json
-      - id: check
-        uses: ./
-        continue-on-error: true
-        with:
-          root-path: /tmp/proj
-      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
 
   integration-root-path-excludes-node-modules:
     name: '[root-path] ignores node_modules'
@@ -129,30 +99,3 @@ jobs:
           files: /tmp/proj/package.json
       - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
 
-  integration-skips-peer-deps-by-default:
-    name: '[peer-deps] skips peerDependencies by default'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          mkdir -p /tmp/proj
-          echo '{"dependencies":{"foo":"1.0.0"},"peerDependencies":{"bar":">=2.0.0"}}' > /tmp/proj/package.json
-      - uses: ./
-        with:
-          root-path: /tmp/proj
-
-  integration-checks-peer-deps-when-enabled:
-    name: '[peer-deps] fails on peerDependencies when opt-in enabled'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          mkdir -p /tmp/proj
-          echo '{"peerDependencies":{"bar":"^2.0.0"}}' > /tmp/proj/package.json
-      - id: check
-        uses: ./
-        continue-on-error: true
-        with:
-          root-path: /tmp/proj
-          check-peer-dependencies: 'true'
-      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'

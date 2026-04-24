@@ -12,6 +12,12 @@ function writePkg(content) {
   return f;
 }
 
+function writePkgRaw(raw) {
+  const f = path.join(os.tmpdir(), `pkg-test-${Date.now()}-${Math.random()}.json`);
+  fs.writeFileSync(f, raw);
+  return f;
+}
+
 describe('checkFile', () => {
   it('returns no violations for pinned deps', () => {
     const f = writePkg({ dependencies: { foo: '1.0.0' }, devDependencies: { bar: '2.3.4' } });
@@ -49,5 +55,52 @@ describe('checkFile', () => {
     assert.equal(result.length, 2);
     assert.ok(result.some(v => v.name === 'a'));
     assert.ok(result.some(v => v.name === 'b'));
+  });
+
+  // --- extended range detection ---
+
+  it('throws on malformed JSON', () => {
+    const f = writePkgRaw('{broken json');
+    assert.throws(() => checkFile(f));
+  });
+
+  it('detects * wildcard', () => {
+    const f = writePkg({ dependencies: { foo: '*' } });
+    assert.deepEqual(checkFile(f), [{ name: 'foo', version: '*' }]);
+  });
+
+  it('detects latest tag', () => {
+    const f = writePkg({ dependencies: { foo: 'latest' } });
+    assert.deepEqual(checkFile(f), [{ name: 'foo', version: 'latest' }]);
+  });
+
+  it('detects >= comparison ranges', () => {
+    const f = writePkg({ dependencies: { foo: '>=1.0.0' } });
+    assert.deepEqual(checkFile(f), [{ name: 'foo', version: '>=1.0.0' }]);
+  });
+
+  it('detects 1.x x-ranges', () => {
+    const f = writePkg({ dependencies: { foo: '1.x' } });
+    assert.deepEqual(checkFile(f), [{ name: 'foo', version: '1.x' }]);
+  });
+
+  it('detects || OR ranges', () => {
+    const f = writePkg({ dependencies: { foo: '1.0.0 || 2.0.0' } });
+    assert.deepEqual(checkFile(f), [{ name: 'foo', version: '1.0.0 || 2.0.0' }]);
+  });
+
+  it('does NOT flag prerelease tags containing x (no false positive)', () => {
+    const f = writePkg({ dependencies: { foo: '1.0.0-fix', bar: '2.0.0-experimental' } });
+    assert.deepEqual(checkFile(f), []);
+  });
+
+  it('checks optionalDependencies by default', () => {
+    const f = writePkg({ optionalDependencies: { opt: '^1.0.0' } });
+    assert.deepEqual(checkFile(f), [{ name: 'opt', version: '^1.0.0' }]);
+  });
+
+  it('skips optionalDependencies when checkOptional is false', () => {
+    const f = writePkg({ optionalDependencies: { opt: '^1.0.0' } });
+    assert.deepEqual(checkFile(f, { checkOptional: false }), []);
   });
 });

@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+jobs:
+  release:
+    name: Create release and update major tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        run: gh release create "${{ github.ref_name }}" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update floating major tag
+        # Keeps @v1 pointing to the latest v1.x.x release so users get fixes automatically.
+        run: |
+          MAJOR=$(echo "${{ github.ref_name }}" | cut -d. -f1)
+          git tag -fa "$MAJOR" -m "Update $MAJOR to ${{ github.ref_name }}"
+          git push origin "$MAJOR" --force
