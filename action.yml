@@ -1,0 +1,48 @@
+name: 'Enforce Pinned npm Dependencies'
+description: 'Fails the build if any npm dependency uses a version range (^ or ~) instead of an exact pinned version'
+author: 'Miragon GmbH'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  package-json-path:
+    description: 'Path to the package.json file to check'
+    required: false
+    default: 'package.json'
+  check-peer-dependencies:
+    description: 'Also check peerDependencies (default: false, since ranges are common there)'
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Check for unpinned dependency versions
+      shell: node {0}
+      run: |
+        const fs = require('fs');
+        const path = require('path');
+
+        const pkgPath = path.resolve('${{ inputs.package-json-path }}');
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+
+        const checkPeer = '${{ inputs.check-peer-dependencies }}' === 'true';
+
+        const toCheck = [
+          ...Object.entries(pkg.dependencies || {}),
+          ...Object.entries(pkg.devDependencies || {}),
+          ...(checkPeer ? Object.entries(pkg.peerDependencies || {}) : []),
+        ];
+
+        const bad = toCheck.filter(([, v]) => /[\^~]/.test(String(v)));
+
+        if (bad.length > 0) {
+          for (const [name, version] of bad) {
+            console.log(`::error file=${{ inputs.package-json-path }}::${name}: "${version}" — use an exact version instead (e.g. "${version.replace(/[\^~]/, '')}")`);
+          }
+          process.exit(1);
+        }
+
+        console.log(`✓ All ${toCheck.length} dependencies are pinned to exact versions.`);

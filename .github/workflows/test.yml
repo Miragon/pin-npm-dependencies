@@ -1,0 +1,86 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-passes-on-pinned:
+    name: Passes when all versions are pinned
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create pinned package.json
+        run: echo '{"dependencies":{"foo":"1.0.0"},"devDependencies":{"bar":"2.3.4"}}' > /tmp/pinned.json
+      - uses: ./
+        with:
+          package-json-path: /tmp/pinned.json
+
+  test-fails-on-caret:
+    name: Fails when ^ range is used
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create ranged package.json
+        run: echo '{"dependencies":{"foo":"^1.0.0"},"devDependencies":{"bar":"2.3.4"}}' > /tmp/caret.json
+      - id: check
+        uses: ./
+        continue-on-error: true
+        with:
+          package-json-path: /tmp/caret.json
+      - name: Assert action failed
+        run: |
+          if [ "${{ steps.check.outcome }}" != "failure" ]; then
+            echo "Expected action to fail on ^ range, but it passed"
+            exit 1
+          fi
+
+  test-fails-on-tilde:
+    name: Fails when ~ range is used
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create ranged package.json
+        run: echo '{"dependencies":{"foo":"~1.0.0"},"devDependencies":{"bar":"2.3.4"}}' > /tmp/tilde.json
+      - id: check
+        uses: ./
+        continue-on-error: true
+        with:
+          package-json-path: /tmp/tilde.json
+      - name: Assert action failed
+        run: |
+          if [ "${{ steps.check.outcome }}" != "failure" ]; then
+            echo "Expected action to fail on ~ range, but it passed"
+            exit 1
+          fi
+
+  test-skips-peer-deps-by-default:
+    name: Skips peerDependencies by default
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create package.json with ranged peerDependencies
+        run: echo '{"dependencies":{"foo":"1.0.0"},"peerDependencies":{"bar":">=2.0.0"}}' > /tmp/peer.json
+      - uses: ./
+        with:
+          package-json-path: /tmp/peer.json
+
+  test-checks-peer-deps-when-enabled:
+    name: Checks peerDependencies when opt-in enabled
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create package.json with ranged peerDependencies
+        run: echo '{"dependencies":{"foo":"1.0.0"},"peerDependencies":{"bar":"^2.0.0"}}' > /tmp/peer-range.json
+      - id: check
+        uses: ./
+        continue-on-error: true
+        with:
+          package-json-path: /tmp/peer-range.json
+          check-peer-dependencies: 'true'
+      - name: Assert action failed
+        run: |
+          if [ "${{ steps.check.outcome }}" != "failure" ]; then
+            echo "Expected action to fail on ranged peerDependency, but it passed"
+            exit 1
+          fi
