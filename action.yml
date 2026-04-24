@@ -25,6 +25,5 @@ inputs:
     default: 'true'
 
 runs:
-  # Node.js runtime — valid values: node20, node24. Update when GitHub deprecates current.
   using: node24
   main: src/index.js

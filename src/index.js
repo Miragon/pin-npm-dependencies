@@ -32,11 +32,10 @@ if (files.length === 0) {
   process.exit(0);
 }
 
-console.log(`Checking ${files.length} package.json file(s)...\n`);
-
 let violations = 0;
 for (const file of files) {
   const rel = path.relative(workspace, file);
+  console.log(`Checking "${rel}" for pinned versions...`);
   let bad;
   try {
     bad = checkFile(file, { checkPeer, checkOptional });
