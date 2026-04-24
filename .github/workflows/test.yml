@@ -5,82 +5,154 @@ on:
   pull_request:
 
 jobs:
-  test-passes-on-pinned:
-    name: Passes when all versions are pinned
+  unit-tests:
+    name: Unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Create pinned package.json
-        run: echo '{"dependencies":{"foo":"1.0.0"},"devDependencies":{"bar":"2.3.4"}}' > /tmp/pinned.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm test
+
+  integration-root-path-passes:
+    name: '[root-path] passes on all-pinned'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p /tmp/proj
+          echo '{"dependencies":{"foo":"1.0.0"},"devDependencies":{"bar":"2.3.4"}}' > /tmp/proj/package.json
       - uses: ./
         with:
-          package-json-path: /tmp/pinned.json
+          root-path: /tmp/proj
 
-  test-fails-on-caret:
-    name: Fails when ^ range is used
+  integration-root-path-fails-on-caret:
+    name: '[root-path] fails on ^ range'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Create ranged package.json
-        run: echo '{"dependencies":{"foo":"^1.0.0"},"devDependencies":{"bar":"2.3.4"}}' > /tmp/caret.json
+      - run: |
+          mkdir -p /tmp/proj
+          echo '{"dependencies":{"foo":"^1.0.0"}}' > /tmp/proj/package.json
       - id: check
         uses: ./
         continue-on-error: true
         with:
-          package-json-path: /tmp/caret.json
-      - name: Assert action failed
-        run: |
-          if [ "${{ steps.check.outcome }}" != "failure" ]; then
-            echo "Expected action to fail on ^ range, but it passed"
-            exit 1
-          fi
+          root-path: /tmp/proj
+      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
 
-  test-fails-on-tilde:
-    name: Fails when ~ range is used
+  integration-root-path-fails-on-tilde:
+    name: '[root-path] fails on ~ range'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Create ranged package.json
-        run: echo '{"dependencies":{"foo":"~1.0.0"},"devDependencies":{"bar":"2.3.4"}}' > /tmp/tilde.json
+      - run: |
+          mkdir -p /tmp/proj
+          echo '{"devDependencies":{"bar":"~2.0.0"}}' > /tmp/proj/package.json
       - id: check
         uses: ./
         continue-on-error: true
         with:
-          package-json-path: /tmp/tilde.json
-      - name: Assert action failed
-        run: |
-          if [ "${{ steps.check.outcome }}" != "failure" ]; then
-            echo "Expected action to fail on ~ range, but it passed"
-            exit 1
-          fi
+          root-path: /tmp/proj
+      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
 
-  test-skips-peer-deps-by-default:
-    name: Skips peerDependencies by default
+  integration-root-path-excludes-node-modules:
+    name: '[root-path] ignores node_modules'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Create package.json with ranged peerDependencies
-        run: echo '{"dependencies":{"foo":"1.0.0"},"peerDependencies":{"bar":">=2.0.0"}}' > /tmp/peer.json
+      - run: |
+          mkdir -p /tmp/proj/node_modules/foo
+          echo '{"dependencies":{"a":"1.0.0"}}' > /tmp/proj/package.json
+          echo '{"dependencies":{"b":"^9.9.9"}}' > /tmp/proj/node_modules/foo/package.json
       - uses: ./
         with:
-          package-json-path: /tmp/peer.json
+          root-path: /tmp/proj
 
-  test-checks-peer-deps-when-enabled:
-    name: Checks peerDependencies when opt-in enabled
+  integration-monorepo-passes:
+    name: '[monorepo] passes when all packages are pinned'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Create package.json with ranged peerDependencies
-        run: echo '{"dependencies":{"foo":"1.0.0"},"peerDependencies":{"bar":"^2.0.0"}}' > /tmp/peer-range.json
+      - run: |
+          mkdir -p /tmp/mono/packages/a /tmp/mono/packages/b
+          echo '{"dependencies":{"foo":"1.0.0"}}' > /tmp/mono/packages/a/package.json
+          echo '{"dependencies":{"bar":"2.0.0"}}' > /tmp/mono/packages/b/package.json
+      - uses: ./
+        with:
+          root-path: /tmp/mono
+
+  integration-monorepo-fails:
+    name: '[monorepo] fails when one package has a range'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p /tmp/mono/packages/a /tmp/mono/packages/b
+          echo '{"dependencies":{"foo":"1.0.0"}}' > /tmp/mono/packages/a/package.json
+          echo '{"dependencies":{"bar":"^2.0.0"}}' > /tmp/mono/packages/b/package.json
       - id: check
         uses: ./
         continue-on-error: true
         with:
-          package-json-path: /tmp/peer-range.json
+          root-path: /tmp/mono
+      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
+
+  integration-files-passes:
+    name: '[files] passes on explicitly listed pinned files'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p /tmp/proj/a /tmp/proj/b
+          echo '{"dependencies":{"foo":"1.0.0"}}' > /tmp/proj/a/package.json
+          echo '{"dependencies":{"bar":"2.0.0"}}' > /tmp/proj/b/package.json
+      - uses: ./
+        with:
+          files: |
+            /tmp/proj/a/package.json
+            /tmp/proj/b/package.json
+
+  integration-files-fails:
+    name: '[files] fails on explicitly listed file with a range'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p /tmp/proj
+          echo '{"dependencies":{"foo":"^1.0.0"}}' > /tmp/proj/package.json
+      - id: check
+        uses: ./
+        continue-on-error: true
+        with:
+          files: /tmp/proj/package.json
+      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
+
+  integration-skips-peer-deps-by-default:
+    name: '[peer-deps] skips peerDependencies by default'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p /tmp/proj
+          echo '{"dependencies":{"foo":"1.0.0"},"peerDependencies":{"bar":">=2.0.0"}}' > /tmp/proj/package.json
+      - uses: ./
+        with:
+          root-path: /tmp/proj
+
+  integration-checks-peer-deps-when-enabled:
+    name: '[peer-deps] fails on peerDependencies when opt-in enabled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p /tmp/proj
+          echo '{"peerDependencies":{"bar":"^2.0.0"}}' > /tmp/proj/package.json
+      - id: check
+        uses: ./
+        continue-on-error: true
+        with:
+          root-path: /tmp/proj
           check-peer-dependencies: 'true'
-      - name: Assert action failed
-        run: |
-          if [ "${{ steps.check.outcome }}" != "failure" ]; then
-            echo "Expected action to fail on ranged peerDependency, but it passed"
-            exit 1
-          fi
+      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'

@@ -1,0 +1,9 @@
+{
+  "name": "pin-npm-dependencies",
+  "version": "1.0.0",
+  "description": "GitHub Action to enforce pinned npm dependency versions",
+  "scripts": {
+    "test": "node --test src/find.test.js src/check.test.js"
+  },
+  "license": "MIT"
+}

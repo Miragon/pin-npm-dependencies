@@ -1,20 +1,75 @@
-# Enforce Pinned npm Dependencies
+# pin-npm-dependencies
 
-A GitHub Action that fails the build if any `dependencies` or `devDependencies` entry in `package.json` uses a version range (`^` or `~`) instead of an exact pinned version.
+A GitHub Action that fails the build if any `dependencies` or `devDependencies` in `package.json` use a version range (`^` or `~`) instead of an exact pinned version.
 
-## Why pin dependencies?
+Works with **npm, yarn, and pnpm** — all three use `package.json` with the same version syntax.
 
-Version ranges like `^1.1.2` allow npm to silently install a newer version during CI. That newer version may have breaking changes or broken internals — as happened with `camunda-transaction-boundaries`, where a patch introduced an unresolvable ESM import that broke builds. Pinning to exact versions makes builds reproducible and failures explicit.
+## Why pin?
+
+Version ranges like `^1.1.2` allow npm to silently install a newer patch/minor version during CI. That version may have breaking internals — exact pinning makes builds reproducible and breakage explicit.
 
 ## Usage
 
+### Scan a directory recursively (default)
+
 ```yaml
-- uses: miragon/action-pin-dependencies@v1
+- uses: miragon/pin-npm-dependencies@v1
 ```
 
-That's it. The action checks `package.json` in the root of your repository and fails with an annotation for each violation.
+Scans all `package.json` files under the repository root, excluding `node_modules`, `.git`, `dist`, and `build`.
 
-### Full example
+### Scan a specific subdirectory (monorepo)
+
+```yaml
+- uses: miragon/pin-npm-dependencies@v1
+  with:
+    root-path: packages/my-lib
+```
+
+### Check explicit files
+
+```yaml
+- uses: miragon/pin-npm-dependencies@v1
+  with:
+    files: |
+      package.json
+      packages/core/package.json
+      packages/ui/package.json
+```
+
+When `files` is set, `root-path` is ignored.
+
+## Inputs
+
+| Input | Description | Default |
+|-------|-------------|---------|
+| `files` | Newline-separated list of `package.json` paths. When set, `root-path` is ignored. | `''` |
+| `root-path` | Root directory to scan recursively (`node_modules` etc. excluded). | `'.'` |
+| `check-peer-dependencies` | Also check `peerDependencies` (ranges are intentional there, so disabled by default). | `'false'` |
+
+## Example output
+
+```
+Checking 3 package.json file(s)...
+
+  ✓ package.json
+::error file=packages/ui/package.json::react: "^18.0.0" — use exact version "18.0.0"
+  ✓ packages/core/package.json
+
+1 unpinned version(s) found. Use exact versions (e.g. "1.2.3" not "^1.2.3").
+```
+
+## Recommended: pair with `.npmrc`
+
+Add `save-exact=true` to your `.npmrc` to prevent `npm install` from writing ranges:
+
+```
+save-exact=true
+```
+
+This guides contributors locally; the action is the CI guardrail.
+
+## Full workflow example
 
 ```yaml
 name: Build
@@ -30,51 +85,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Enforce pinned dependencies
-        uses: miragon/action-pin-dependencies@v1
+        uses: miragon/pin-npm-dependencies@v1
 
       - run: npm ci
       - run: npm test
 ```
-
-## Inputs
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `package-json-path` | Path to the `package.json` file to check | `package.json` |
-| `check-peer-dependencies` | Also check `peerDependencies` (ranges are common there, so disabled by default) | `false` |
-
-### Custom path example
-
-```yaml
-- uses: miragon/action-pin-dependencies@v1
-  with:
-    package-json-path: packages/my-lib/package.json
-```
-
-## Example output
-
-When violations are found, each one appears as a GitHub annotation on the PR:
-
-```
-✗ camunda-transaction-boundaries: "^1.1.2" — use an exact version instead (e.g. "1.1.2")
-✗ some-other-dep: "~2.0.0" — use an exact version instead (e.g. "2.0.0")
-```
-
-When all versions are pinned:
-
-```
-✓ All 14 dependencies are pinned to exact versions.
-```
-
-## Recommended: pair with `.npmrc`
-
-Add `save-exact=true` to your `.npmrc` to prevent contributors from accidentally introducing ranges via `npm install`:
-
-```
-save-exact=true
-```
-
-This acts as a first line of defence locally; the action is the CI guardrail.
 
 ## License
 
