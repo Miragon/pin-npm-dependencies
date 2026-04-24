@@ -1,5 +1,5 @@
 name: 'Pin npm Dependencies'
-description: 'Fails the build if any npm dependency uses a version range (^ or ~) instead of an exact pinned version. Works with npm, yarn, and pnpm.'
+description: 'Fails the build if any npm dependency uses a version range (^ or ~) instead of a pinned version.'
 author: 'Miragon GmbH'
 
 branding:
