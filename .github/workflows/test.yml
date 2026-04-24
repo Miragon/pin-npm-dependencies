@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - run: npm test
 
   integration-root-path-passes:
@@ -156,3 +156,76 @@ jobs:
           root-path: /tmp/proj
           check-peer-dependencies: 'true'
       - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
+
+  integration-fails-on-wildcard:
+    name: '[ranges] fails on * wildcard'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p /tmp/proj
+          echo '{"dependencies":{"foo":"*"}}' > /tmp/proj/package.json
+      - id: check
+        uses: ./
+        continue-on-error: true
+        with:
+          root-path: /tmp/proj
+      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
+
+  integration-fails-on-latest:
+    name: '[ranges] fails on latest tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p /tmp/proj
+          echo '{"dependencies":{"foo":"latest"}}' > /tmp/proj/package.json
+      - id: check
+        uses: ./
+        continue-on-error: true
+        with:
+          root-path: /tmp/proj
+      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
+
+  integration-fails-on-malformed-json:
+    name: '[error] fails gracefully on malformed JSON'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p /tmp/proj
+          printf '{broken' > /tmp/proj/package.json
+      - id: check
+        uses: ./
+        continue-on-error: true
+        with:
+          root-path: /tmp/proj
+      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
+
+  integration-optional-deps-checked-by-default:
+    name: '[optional-deps] fails on optionalDependencies by default'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p /tmp/proj
+          echo '{"optionalDependencies":{"foo":"^1.0.0"}}' > /tmp/proj/package.json
+      - id: check
+        uses: ./
+        continue-on-error: true
+        with:
+          root-path: /tmp/proj
+      - run: '[ "${{ steps.check.outcome }}" = "failure" ] || (echo "Expected failure, got ${{ steps.check.outcome }}" && exit 1)'
+
+  integration-optional-deps-skipped-when-disabled:
+    name: '[optional-deps] passes when check-optional-dependencies disabled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p /tmp/proj
+          echo '{"optionalDependencies":{"foo":"^1.0.0"}}' > /tmp/proj/package.json
+      - uses: ./
+        with:
+          root-path: /tmp/proj
+          check-optional-dependencies: 'false'

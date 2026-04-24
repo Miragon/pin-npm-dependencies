@@ -40,4 +40,31 @@ describe('findPackageJsonFiles', () => {
     assert.deepEqual(findPackageJsonFiles(empty), []);
     fs.rmSync(empty, { recursive: true });
   });
+
+  it('emits ::warning:: for permission-denied directories and continues', () => {
+    // Create a restricted subdir on platforms that support chmod
+    const restricted = fs.mkdtempSync(path.join(os.tmpdir(), 'restricted-'));
+    const inner = path.join(restricted, 'locked');
+    fs.mkdirSync(inner);
+    fs.writeFileSync(path.join(restricted, 'package.json'), '{}');
+    fs.chmodSync(inner, 0o000);
+
+    const messages = [];
+    const orig = console.log;
+    console.log = (...args) => messages.push(args.join(' '));
+    try {
+      const found = findPackageJsonFiles(restricted);
+      // Root package.json is still found
+      assert.equal(found.length, 1);
+      // A warning was emitted for the locked dir (skip on Windows/root where chmod doesn't apply)
+      const warned = messages.some(m => m.includes('::warning::') && m.includes('locked'));
+      if (process.platform !== 'win32' && process.getuid && process.getuid() !== 0) {
+        assert.ok(warned, 'expected ::warning:: for permission-denied directory');
+      }
+    } finally {
+      console.log = orig;
+      fs.chmodSync(inner, 0o755);
+      fs.rmSync(restricted, { recursive: true });
+    }
+  });
 });
