@@ -25,6 +25,6 @@ inputs:
     default: 'true'
 
 runs:
-  # Node.js LTS runtime — update when current LTS changes (track https://nodejs.org/en/about/previous-releases)
-  using: node22
+  # Node.js runtime — valid values: node20, node24. Update when GitHub deprecates current.
+  using: node24
   main: src/index.js
