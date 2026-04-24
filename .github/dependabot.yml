@@ -1,6 +1,5 @@
 version: 2
 updates:
-  # Config for npm dependencies
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -14,7 +13,6 @@ updates:
           - "minor"
           - "major"
 
-  # Config for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
