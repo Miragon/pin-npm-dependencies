@@ -22,5 +22,5 @@ jobs:
         # Keeps @v1 pointing to the latest v1.x.x release so users get fixes automatically.
         run: |
           MAJOR=$(echo "${{ github.ref_name }}" | cut -d. -f1)
-          git tag -fa "$MAJOR" -m "Update $MAJOR to ${{ github.ref_name }}"
+          git tag -f "$MAJOR"
           git push origin "$MAJOR" --force
