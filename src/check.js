@@ -2,15 +2,15 @@
 const fs = require('fs');
 
 const RULES = [
-  { re: /[\^~]/,                                                                   reason: 'caret/tilde range' },
-  { re: /^\s*[><]/,                                                                reason: 'comparison range' },
-  { re: /^\s*\*$/,                                                                 reason: 'wildcard *' },
-  { re: /^\s*latest\s*$/,                                                          reason: 'floating "latest" tag' },
-  { re: /\.\s*[xX*](?:\.|$)/,                                                     reason: 'x-range (e.g. 1.x)' },
-  { re: /^\s*[xX]\b/,                                                             reason: 'standalone x-range' },
-  { re: /\|\|/,                                                                    reason: 'OR range' },
+  { re: /[\^~]/, reason: 'caret/tilde range' },
+  { re: /^\s*[><]/, reason: 'comparison range' },
+  { re: /^\s*\*$/, reason: 'wildcard *' },
+  { re: /^\s*latest\s*$/, reason: 'floating "latest" tag' },
+  { re: /\.\s*[xX*](?:\.|$)/, reason: 'x-range (e.g. 1.x)' },
+  { re: /^\s*[xX]\b/, reason: 'standalone x-range' },
+  { re: /\|\|/, reason: 'OR range' },
   // git deps: mutable branch name after # (master, main, HEAD, common dev branches)
-  { re: /#(master|main|HEAD|develop|dev|next|trunk)\b/,                           reason: 'mutable git branch ref' },
+  { re: /#(master|main|HEAD|develop|dev|next|trunk)\b/, reason: 'mutable git branch ref' },
   // git deps: no # fragment at all — npm defaults to the default branch (mutable)
   { re: /^(git\+https?:|git\+ssh:|git:\/\/|git@|github:|gitlab:|bitbucket:)[^#]*$/, reason: 'unpinned git source (no commit ref)' },
 ];
