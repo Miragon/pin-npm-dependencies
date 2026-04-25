@@ -4,8 +4,6 @@ A GitHub Action that fails the build if any dependency in `package.json` is not 
 
 Works with **npm, yarn, and pnpm**.
 
----
-
 ## The risk: version ranges are a supply chain attack surface
 
 When you write `"axios": "^1.7.2"`, you're not installing axios 1.7.2. You're installing *whatever is the latest compatible version at the time `npm install` runs* — across every developer machine, every CI run, every deployment.
@@ -43,7 +41,6 @@ In agentic workflows, the exposure compounds: an agent may install dependencies 
 
 A CI guardrail that catches unpinned versions before they reach the install step is a simple, high-leverage control — especially as the share of AI-authored code in your repo grows.
 
----
 
 ## What this action catches
 
@@ -59,7 +56,6 @@ A CI guardrail that catches unpinned versions before they reach the install step
 
 Safe patterns that are **not** flagged: exact semver (`1.2.3`), git SHA pins (`github:owner/repo#abc1234`), version tags (`github:owner/repo#v1.2.3`).
 
----
 
 ## Usage
 
@@ -92,7 +88,6 @@ Scans all `package.json` files under the repository root, excluding `node_module
 
 When `files` is set, `root-path` is ignored.
 
----
 
 ## Inputs
 
@@ -103,7 +98,6 @@ When `files` is set, `root-path` is ignored.
 | `check-peer-dependencies` | Also check `peerDependencies` (ranges are intentional there, so disabled by default). | `'false'` |
 | `check-optional-dependencies` | Also check `optionalDependencies`. | `'true'` |
 
----
 
 ## Example output
 
@@ -117,7 +111,6 @@ Checking "packages/ui/package.json" for pinned versions...
 2 unpinned version(s) found. Use exact versions (e.g. "1.2.3" not "^1.2.3").
 ```
 
----
 
 ## Recommended: pair with `.npmrc`
 
@@ -129,7 +122,6 @@ save-exact=true
 
 This guides developers at the source; the action is the CI guardrail that ensures nothing slips through.
 
----
 
 ## Full workflow example
 
@@ -153,7 +145,6 @@ jobs:
       - run: npm test
 ```
 
----
 
 ## License
 
