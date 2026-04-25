@@ -8,9 +8,7 @@ Works with **npm, yarn, and pnpm**.
 
 When you write `"axios": "^1.7.2"`, you're not installing axios 1.7.2. You're installing *the latest `1.x` release at the time `npm install` runs* — and that can differ across developer machines, CI runs, and deployments. That gap is exactly what attackers can exploit.
 
-In December 2022 the `@ledgerhq/connect-kit` package was compromised via a stolen maintainer token. Projects that had pinned the exact version were unaffected. Projects using `^` or `~` silently pulled the malicious version on their next install. The result: $600k drained from users' wallets within hours.
-
-In 2022, the maintainers of `colors` and `faker` — packages with hundreds of millions of weekly downloads — intentionally pushed breaking, destructive versions. Projects with exact pins could audit and choose when (or whether) to upgrade. Everyone else broke silently overnight.
+In March 2026, `axios` — the most downloaded JavaScript HTTP client, with over 100 million weekly installs — was compromised by a North Korea-nexus threat actor. Two malicious versions were published containing an obfuscated backdoor capable of stealing credentials and executing arbitrary commands. Any project using a caret range like `^1.7.2` pulled them in automatically on the next `npm install`, with no action required from the developer.
 
 The attack pattern is consistent:
 1. A package maintainer's credentials are phished, or the package is abandoned and re-registered
