@@ -6,7 +6,7 @@ Works with **npm, yarn, and pnpm**.
 
 ## The risk: version ranges are a supply chain attack surface
 
-When you write `"axios": "^1.7.2"`, you're not installing axios 1.7.2. You're installing *whatever is the latest compatible version at the time `npm install` runs* — across every developer machine, every CI run, every deployment.
+When you write `"axios": "^1.7.2"`, you're not installing axios 1.7.2. You're installing *the latest `1.x` release at the time `npm install` runs* — and that can differ across developer machines, CI runs, and deployments.
 
 That gap is exactly what attackers exploit.
 
