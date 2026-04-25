@@ -1,11 +1,24 @@
 'use strict';
 const fs = require('fs');
 
-// Detects version strings that are not exact pinned semver.
-// Catches: ^ ~ (caret/tilde), >= > < <= (comparisons), * (wildcard),
-// latest (npm tag), 1.x / 1.X / 1.* (x-ranges), || (OR ranges).
-// Does NOT flag: = prefix (exact in npm), hyphen ranges (1.0.0 - 2.0.0, rare).
-const RANGE_RE = /[\^~]|^\s*[><]|^\s*\*$|^\s*latest\s*$|\.\s*[xX*](?:\.|$)|^\s*[xX]\b|\|\|/;
+const RULES = [
+  { re: /[\^~]/, reason: 'caret/tilde range' },
+  { re: /^\s*[><]/, reason: 'comparison range' },
+  { re: /^\s*\*$/, reason: 'wildcard *' },
+  { re: /^\s*latest\s*$/, reason: 'floating "latest" tag' },
+  { re: /\.\s*[xX*](?:\.|$)/, reason: 'x-range (e.g. 1.x)' },
+  { re: /^\s*[xX]\b/, reason: 'standalone x-range' },
+  { re: /\|\|/, reason: 'OR range' },
+  // git deps: mutable branch name after # (master, main, HEAD, common dev branches)
+  { re: /#(master|main|HEAD|develop|dev|next|trunk)\b/, reason: 'mutable git branch ref' },
+  // git deps: no # fragment at all — npm defaults to the default branch (mutable)
+  { re: /^(git\+https?:|git\+ssh:|git:\/\/|git@|github:|gitlab:|bitbucket:)[^#]*$/, reason: 'unpinned git source (no commit ref)' },
+];
+
+function getViolationReason(v) {
+  const rule = RULES.find(r => r.re.test(v));
+  return rule ? rule.reason : null;
+}
 
 function checkFile(filePath, { checkPeer = false, checkOptional = true } = {}) {
   const pkg = JSON.parse(fs.readFileSync(filePath, 'utf8')); // throws on bad JSON
@@ -16,8 +29,8 @@ function checkFile(filePath, { checkPeer = false, checkOptional = true } = {}) {
     ...(checkOptional ? Object.entries(pkg.optionalDependencies || {}) : []),
   ];
   return entries
-    .filter(([, v]) => RANGE_RE.test(String(v)))
-    .map(([name, version]) => ({ name, version }));
+    .filter(([, v]) => getViolationReason(String(v)) !== null)
+    .map(([name, version]) => ({ name, version, reason: getViolationReason(String(version)) }));
 }
 
 module.exports = { checkFile };
