@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/Miragon/pin-npm-dependencies/compare/v1.2.0...v1.2.1) (2026-06-19)
+
+
+### Bug Fixes
+
+* drop component prefix from release tags ([#13](https://github.com/Miragon/pin-npm-dependencies/issues/13)) ([9f2a8ff](https://github.com/Miragon/pin-npm-dependencies/commit/9f2a8ffd02eee289c4727813aeea27b19245e291))
+
 ## [1.2.0](https://github.com/Miragon/pin-npm-dependencies/compare/pin-npm-dependencies-v1.1.0...pin-npm-dependencies-v1.2.0) (2026-06-19)
 
 

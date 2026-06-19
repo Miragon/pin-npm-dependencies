@@ -1,6 +1,6 @@
 {
   "name": "pin-npm-dependencies",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "GitHub Action to enforce pinned npm dependency versions",
   "scripts": {
     "test": "node --test src/find.test.js src/check.test.js"
