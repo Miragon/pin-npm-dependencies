@@ -13,20 +13,12 @@ jobs:
     name: Release Please
     runs-on: ubuntu-latest
     steps:
-      # Mint a short-lived token from the GitHub App so release-please acts AS the
-      # app instead of the default GITHUB_TOKEN. This buys two things:
-      #   1. Its Release PR / commits / tags trigger other workflows (CI on the PR);
-      #      the default GITHUB_TOKEN deliberately does NOT re-trigger workflows.
-      #   2. Commits created via the API are auto-signed -> show as "Verified",
-      #      satisfying a require-signed-commits branch rule.
       - uses: actions/create-github-app-token@v2
         id: app-token
         with:
           app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
 
-      # Maintains a "Release PR" that bumps package.json + CHANGELOG.md from
-      # Conventional Commits. Merging that PR cuts the vX.Y.Z tag and GitHub Release.
       - uses: googleapis/release-please-action@v5
         id: release
         with:
@@ -34,14 +26,12 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      # Everything below only runs on the push that merges the Release PR.
       - uses: actions/checkout@v7
         if: ${{ steps.release.outputs.release_created }}
         with:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Update floating major tag
-        # Keeps @v1 pointing to the latest v1.x.x release so users get fixes automatically.
         if: ${{ steps.release.outputs.release_created }}
         run: |
           git tag -f "v${{ steps.release.outputs.major }}"
