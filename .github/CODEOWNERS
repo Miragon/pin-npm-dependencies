@@ -1,0 +1,3 @@
+# Default owner for everything in this repo.
+# Dependabot and other PRs that touch owned paths will request review from these owners.
+* @emaarco
