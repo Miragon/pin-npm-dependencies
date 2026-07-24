@@ -18,7 +18,15 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Enable auto-merge for patch and minor updates
         if: steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor'
-        run: gh pr merge --auto --squash "$PR_URL"
+        # Retry: enablePullRequestAutoMerge races GitHub's merge-state
+        # computation and returns "unstable status" when checks are still settling.
+        run: |
+          for i in 1 2 3 4 5; do
+            gh pr merge --auto --squash "$PR_URL" && exit 0
+            echo "enablePullRequestAutoMerge race (attempt $i) — retrying in 15s…"
+            sleep 15
+          done
+          exit 1
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
