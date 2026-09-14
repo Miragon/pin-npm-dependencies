@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/Miragon/pin-npm-dependencies/compare/v1.2.1...v1.2.2) (2026-09-14)
+
+
+### Bug Fixes
+
+* accept Yarn patch: and workspace: descriptors with an exact version ([#23](https://github.com/Miragon/pin-npm-dependencies/issues/23)) ([2589edf](https://github.com/Miragon/pin-npm-dependencies/commit/2589edf43143610624956dbba0603c9c3a37d810))
+
 ## [1.2.1](https://github.com/Miragon/pin-npm-dependencies/compare/v1.2.0...v1.2.1) (2026-06-19)
 
 
