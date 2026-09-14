@@ -135,4 +135,58 @@ describe('checkFile', () => {
     const f = writePkg({ dependencies: { foo: 'github:owner/repo#v1.2.3' } });
     assert.deepEqual(checkFile(f), []);
   });
+
+  // --- Yarn patch: protocol descriptors ---
+
+  it('does NOT flag patch: descriptor with an exact inner version', () => {
+    const v = 'patch:some-package@npm%3A1.2.3#~/.yarn/patches/some-package-npm-1.2.3-abcdef1234.patch';
+    const f = writePkg({ dependencies: { 'some-package': v } });
+    assert.deepEqual(checkFile(f), []);
+  });
+
+  it('does NOT flag patch: descriptor with a scoped inner package name', () => {
+    const v = 'patch:@scope/pkg@npm%3A1.2.3#~/.yarn/patches/scope-pkg-npm-1.2.3-abcdef.patch';
+    const f = writePkg({ dependencies: { '@scope/pkg': v } });
+    assert.deepEqual(checkFile(f), []);
+  });
+
+  it('does NOT flag patch: descriptor using the #~builtin form', () => {
+    const v = 'patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>';
+    const f = writePkg({ dependencies: { fsevents: v } });
+    assert.deepEqual(checkFile(f), []);
+  });
+
+  it('does NOT flag patch: descriptor with an already-decoded inner version', () => {
+    const v = 'patch:some-package@npm:1.2.3#~/.yarn/patches/some-package.patch';
+    const f = writePkg({ dependencies: { 'some-package': v } });
+    assert.deepEqual(checkFile(f), []);
+  });
+
+  it('detects patch: descriptor whose inner version is a caret range', () => {
+    const v = 'patch:some-package@npm%3A^1.2.3#~/.yarn/patches/some-package.patch';
+    const f = writePkg({ dependencies: { 'some-package': v } });
+    assert.deepEqual(checkFile(f), [{ name: 'some-package', version: v, reason: 'caret/tilde range' }]);
+  });
+
+  // --- Yarn workspace: protocol descriptors ---
+
+  it('does NOT flag workspace: descriptor with an exact reference', () => {
+    const f = writePkg({ dependencies: { pkg: 'workspace:1.2.3' } });
+    assert.deepEqual(checkFile(f), []);
+  });
+
+  it('does NOT flag workspace:* wildcard reference', () => {
+    const f = writePkg({ dependencies: { pkg: 'workspace:*' } });
+    assert.deepEqual(checkFile(f), []);
+  });
+
+  it('detects workspace: descriptor with a caret range', () => {
+    const f = writePkg({ dependencies: { pkg: 'workspace:^1.2.3' } });
+    assert.deepEqual(checkFile(f), [{ name: 'pkg', version: 'workspace:^1.2.3', reason: 'caret/tilde range' }]);
+  });
+
+  it('detects workspace: descriptor with a tilde range', () => {
+    const f = writePkg({ dependencies: { pkg: 'workspace:~1.0.0' } });
+    assert.deepEqual(checkFile(f), [{ name: 'pkg', version: 'workspace:~1.0.0', reason: 'caret/tilde range' }]);
+  });
 });
