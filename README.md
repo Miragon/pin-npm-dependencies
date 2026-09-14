@@ -49,7 +49,7 @@ A CI guardrail that catches unpinned versions before they reach the install step
 | Mutable git branch ref | `github:owner/repo#master` | Branch can be force-pushed |
 | Unpinned git source | `github:owner/repo` | Defaults to default branch |
 
-Safe patterns that are **not** flagged: exact semver (`1.2.3`), git SHA pins (`github:owner/repo#abc1234`), version tags (`github:owner/repo#v1.2.3`).
+Safe patterns that are **not** flagged: exact semver (`1.2.3`), git SHA pins (`github:owner/repo#abc1234`), version tags (`github:owner/repo#v1.2.3`), Yarn `patch:` descriptors whose inner version is exact (`patch:pkg@npm%3A1.2.3#~/.yarn/patches/…`), and Yarn `workspace:` descriptors with an exact reference or `*` (`workspace:1.2.3`, `workspace:*`). A `patch:`/`workspace:` descriptor whose inner version is a range (e.g. `patch:pkg@npm%3A^1.2.3#…`, `workspace:^1.2.3`) is still flagged.
 
 ## Usage
 
