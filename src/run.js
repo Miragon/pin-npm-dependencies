@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { findPackageJsonFiles } = require('./find.js');
-const { checkManifest } = require('./check.js');
+const { PinPolicy } = require('./policy.js');
 
 function resolveFiles({ files, rootPath, workspace }) {
   if (files) {
@@ -34,7 +34,7 @@ function run({ files: filesInput = '', rootPath = '.', checkPeer = false, checkO
     lines.push(`Checking "${rel}" for pinned versions...`);
     let bad;
     try {
-      bad = checkManifest(JSON.parse(fs.readFileSync(file, 'utf8')), { checkPeer, checkOptional });
+      bad = new PinPolicy({ checkPeer, checkOptional }).violationsIn(JSON.parse(fs.readFileSync(file, 'utf8')));
     } catch (e) {
       lines.push(`::error file=${rel}::Could not parse package.json: ${e.message}`);
       violations++;
