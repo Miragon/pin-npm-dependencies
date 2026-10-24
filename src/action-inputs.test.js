@@ -1,7 +1,7 @@
 'use strict';
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { ActionInputs } = require('./inputs.js');
+const { ActionInputs } = require('./action-inputs.js');
 
 describe('ActionInputs', () => {
   it('applies defaults when no inputs are set', () => {

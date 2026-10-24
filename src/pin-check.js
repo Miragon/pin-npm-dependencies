@@ -1,9 +1,9 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { ManifestLocator, InputError } = require('./locator.js');
-const { PinPolicy } = require('./policy.js');
-const { PinReport } = require('./report.js');
+const { ManifestLocator, InputError } = require('./manifest-locator.js');
+const { PinPolicy } = require('./pin-policy.js');
+const { PinReport } = require('./pin-report.js');
 
 class PinCheck {
   #inputs;

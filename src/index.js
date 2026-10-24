@@ -1,5 +1,5 @@
 'use strict';
-const { ActionInputs } = require('./inputs.js');
+const { ActionInputs } = require('./action-inputs.js');
 const { PinCheck } = require('./pin-check.js');
 
 const report = new PinCheck(ActionInputs.fromEnv(process.env)).run();

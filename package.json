@@ -3,7 +3,7 @@
   "version": "1.2.2",
   "description": "GitHub Action to enforce pinned npm dependency versions",
   "scripts": {
-    "test": "node --test src/inputs.test.js src/locator.test.js src/policy.test.js src/pin-check.test.js"
+    "test": "node --test src/action-inputs.test.js src/manifest-locator.test.js src/pin-policy.test.js src/pin-check.test.js"
   },
   "license": "MIT"
 }

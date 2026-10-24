@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { ManifestLocator, InputError } = require('./locator.js');
+const { ManifestLocator, InputError } = require('./manifest-locator.js');
 
 const canRestrictPermissions = process.platform !== 'win32' && process.getuid?.() !== 0;
 
