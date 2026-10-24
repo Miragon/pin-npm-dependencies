@@ -1,7 +1,7 @@
 'use strict';
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { PinPolicy } = require('./policy.js');
+const { PinPolicy } = require('./pin-policy.js');
 
 function violationsIn(manifest, options) {
   return new PinPolicy(options).violationsIn(manifest);

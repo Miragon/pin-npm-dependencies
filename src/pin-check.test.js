@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { ActionInputs } = require('./inputs.js');
+const { ActionInputs } = require('./action-inputs.js');
 const { PinCheck } = require('./pin-check.js');
 
 function run(options) {
