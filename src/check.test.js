@@ -18,6 +18,10 @@ function writePkgRaw(raw) {
   return f;
 }
 
+function checkFileReasons(f, options) {
+  return checkFile(f, options).map(({ suggestion, ...violation }) => violation);
+}
+
 describe('checkFile', () => {
   it('returns no violations for pinned deps', () => {
     const f = writePkg({ dependencies: { foo: '1.0.0' }, devDependencies: { bar: '2.3.4' } });
@@ -26,12 +30,12 @@ describe('checkFile', () => {
 
   it('detects ^ caret ranges in dependencies', () => {
     const f = writePkg({ dependencies: { foo: '^1.0.0' } });
-    assert.deepEqual(checkFile(f), [{ name: 'foo', version: '^1.0.0', reason: 'caret/tilde range' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'foo', version: '^1.0.0', reason: 'caret/tilde range' }]);
   });
 
   it('detects ~ tilde ranges in devDependencies', () => {
     const f = writePkg({ devDependencies: { bar: '~2.0.0' } });
-    assert.deepEqual(checkFile(f), [{ name: 'bar', version: '~2.0.0', reason: 'caret/tilde range' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'bar', version: '~2.0.0', reason: 'caret/tilde range' }]);
   });
 
   it('skips peerDependencies by default', () => {
@@ -41,7 +45,7 @@ describe('checkFile', () => {
 
   it('checks peerDependencies when checkPeer is true', () => {
     const f = writePkg({ peerDependencies: { peer: '^3.0.0' } });
-    assert.deepEqual(checkFile(f, { checkPeer: true }), [{ name: 'peer', version: '^3.0.0', reason: 'caret/tilde range' }]);
+    assert.deepEqual(checkFileReasons(f, { checkPeer: true }), [{ name: 'peer', version: '^3.0.0', reason: 'caret/tilde range' }]);
   });
 
   it('handles missing dependency sections gracefully', () => {
@@ -66,27 +70,27 @@ describe('checkFile', () => {
 
   it('detects * wildcard', () => {
     const f = writePkg({ dependencies: { foo: '*' } });
-    assert.deepEqual(checkFile(f), [{ name: 'foo', version: '*', reason: 'wildcard *' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'foo', version: '*', reason: 'wildcard *' }]);
   });
 
   it('detects latest tag', () => {
     const f = writePkg({ dependencies: { foo: 'latest' } });
-    assert.deepEqual(checkFile(f), [{ name: 'foo', version: 'latest', reason: 'floating "latest" tag' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'foo', version: 'latest', reason: 'floating "latest" tag' }]);
   });
 
   it('detects >= comparison ranges', () => {
     const f = writePkg({ dependencies: { foo: '>=1.0.0' } });
-    assert.deepEqual(checkFile(f), [{ name: 'foo', version: '>=1.0.0', reason: 'comparison range' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'foo', version: '>=1.0.0', reason: 'comparison range' }]);
   });
 
   it('detects 1.x x-ranges', () => {
     const f = writePkg({ dependencies: { foo: '1.x' } });
-    assert.deepEqual(checkFile(f), [{ name: 'foo', version: '1.x', reason: 'x-range (e.g. 1.x)' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'foo', version: '1.x', reason: 'x-range (e.g. 1.x)' }]);
   });
 
   it('detects || OR ranges', () => {
     const f = writePkg({ dependencies: { foo: '1.0.0 || 2.0.0' } });
-    assert.deepEqual(checkFile(f), [{ name: 'foo', version: '1.0.0 || 2.0.0', reason: 'OR range' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'foo', version: '1.0.0 || 2.0.0', reason: 'OR range' }]);
   });
 
   it('does NOT flag prerelease tags containing x (no false positive)', () => {
@@ -96,7 +100,7 @@ describe('checkFile', () => {
 
   it('checks optionalDependencies by default', () => {
     const f = writePkg({ optionalDependencies: { opt: '^1.0.0' } });
-    assert.deepEqual(checkFile(f), [{ name: 'opt', version: '^1.0.0', reason: 'caret/tilde range' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'opt', version: '^1.0.0', reason: 'caret/tilde range' }]);
   });
 
   it('skips optionalDependencies when checkOptional is false', () => {
@@ -108,22 +112,22 @@ describe('checkFile', () => {
 
   it('detects github: shorthand with #master branch ref', () => {
     const f = writePkg({ dependencies: { foo: 'github:owner/repo#master' } });
-    assert.deepEqual(checkFile(f), [{ name: 'foo', version: 'github:owner/repo#master', reason: 'mutable git branch ref' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'foo', version: 'github:owner/repo#master', reason: 'mutable git branch ref' }]);
   });
 
   it('detects git+https URL with #main branch ref', () => {
     const f = writePkg({ dependencies: { foo: 'git+https://github.com/owner/repo.git#main' } });
-    assert.deepEqual(checkFile(f), [{ name: 'foo', version: 'git+https://github.com/owner/repo.git#main', reason: 'mutable git branch ref' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'foo', version: 'git+https://github.com/owner/repo.git#main', reason: 'mutable git branch ref' }]);
   });
 
   it('detects github: shorthand with #HEAD', () => {
     const f = writePkg({ dependencies: { foo: 'github:owner/repo#HEAD' } });
-    assert.deepEqual(checkFile(f), [{ name: 'foo', version: 'github:owner/repo#HEAD', reason: 'mutable git branch ref' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'foo', version: 'github:owner/repo#HEAD', reason: 'mutable git branch ref' }]);
   });
 
   it('detects github: shorthand with no hash (defaults to default branch)', () => {
     const f = writePkg({ dependencies: { foo: 'github:owner/repo' } });
-    assert.deepEqual(checkFile(f), [{ name: 'foo', version: 'github:owner/repo', reason: 'unpinned git source (no commit ref)' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'foo', version: 'github:owner/repo', reason: 'unpinned git source (no commit ref)' }]);
   });
 
   it('does NOT flag github: shorthand pinned to a commit SHA', () => {
@@ -165,7 +169,7 @@ describe('checkFile', () => {
   it('detects patch: descriptor whose inner version is a caret range', () => {
     const v = 'patch:some-package@npm%3A^1.2.3#~/.yarn/patches/some-package.patch';
     const f = writePkg({ dependencies: { 'some-package': v } });
-    assert.deepEqual(checkFile(f), [{ name: 'some-package', version: v, reason: 'caret/tilde range' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'some-package', version: v, reason: 'caret/tilde range' }]);
   });
 
   // --- Yarn workspace: protocol descriptors ---
@@ -182,11 +186,29 @@ describe('checkFile', () => {
 
   it('detects workspace: descriptor with a caret range', () => {
     const f = writePkg({ dependencies: { pkg: 'workspace:^1.2.3' } });
-    assert.deepEqual(checkFile(f), [{ name: 'pkg', version: 'workspace:^1.2.3', reason: 'caret/tilde range' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'pkg', version: 'workspace:^1.2.3', reason: 'caret/tilde range' }]);
   });
 
   it('detects workspace: descriptor with a tilde range', () => {
     const f = writePkg({ dependencies: { pkg: 'workspace:~1.0.0' } });
-    assert.deepEqual(checkFile(f), [{ name: 'pkg', version: 'workspace:~1.0.0', reason: 'caret/tilde range' }]);
+    assert.deepEqual(checkFileReasons(f), [{ name: 'pkg', version: 'workspace:~1.0.0', reason: 'caret/tilde range' }]);
+  });
+
+  // --- fix suggestions ---
+
+  it('suggests the exact version stripped of its range operator', () => {
+    const f = writePkg({ dependencies: { foo: '^1.2.3', bar: '>=2.0.0 || 3.0.0' } });
+    assert.deepEqual(checkFile(f).map(v => v.suggestion), ['use exact version "1.2.3"', 'use exact version "2.0.0"']);
+  });
+
+  it('suggests a generic exact version when nothing can be stripped', () => {
+    const f = writePkg({ dependencies: { foo: 'latest' } });
+    assert.equal(checkFile(f)[0].suggestion, 'pin to an exact version (e.g. "1.2.3")');
+  });
+
+  it('suggests a commit SHA for git sources', () => {
+    const f = writePkg({ dependencies: { foo: 'github:owner/repo#main', bar: 'github:owner/repo' } });
+    const suggestions = checkFile(f).map(v => v.suggestion);
+    assert.ok(suggestions.every(s => s.startsWith('pin to a commit SHA')));
   });
 });

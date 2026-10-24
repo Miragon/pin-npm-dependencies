@@ -44,11 +44,7 @@ for (const file of files) {
     violations++;
     continue;
   }
-  for (const { name, version, reason } of bad) {
-    const stripped = version.replace(/^[\^~>=<\s]+/, '').replace(/\s*\|\|.*$/, '').trim();
-    const suggestion = reason.includes('git')
-      ? 'pin to a commit SHA (e.g. "git+https://github.com/owner/repo.git#abc1234")'
-      : (stripped && stripped !== version ? `use exact version "${stripped}"` : 'pin to an exact version (e.g. "1.2.3")');
+  for (const { name, version, reason, suggestion } of bad) {
     console.log(`::error file=${rel}::${name}: "${version}" — ${reason}; ${suggestion}`);
     violations++;
   }

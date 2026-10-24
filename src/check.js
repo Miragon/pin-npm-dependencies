@@ -1,18 +1,29 @@
 'use strict';
 const fs = require('fs');
 
+function suggestExactVersion(version) {
+  const stripped = version.replace(/^[\^~>=<\s]+/, '').replace(/\s*\|\|.*$/, '').trim();
+  return stripped && stripped !== version
+    ? `use exact version "${stripped}"`
+    : 'pin to an exact version (e.g. "1.2.3")';
+}
+
+function suggestCommitSha() {
+  return 'pin to a commit SHA (e.g. "git+https://github.com/owner/repo.git#abc1234")';
+}
+
 const RULES = [
-  { re: /[\^~]/, reason: 'caret/tilde range' },
-  { re: /^\s*[><]/, reason: 'comparison range' },
-  { re: /^\s*\*$/, reason: 'wildcard *' },
-  { re: /^\s*latest\s*$/, reason: 'floating "latest" tag' },
-  { re: /\.\s*[xX*](?:\.|$)/, reason: 'x-range (e.g. 1.x)' },
-  { re: /^\s*[xX]\b/, reason: 'standalone x-range' },
-  { re: /\|\|/, reason: 'OR range' },
+  { re: /[\^~]/, reason: 'caret/tilde range', suggest: suggestExactVersion },
+  { re: /^\s*[><]/, reason: 'comparison range', suggest: suggestExactVersion },
+  { re: /^\s*\*$/, reason: 'wildcard *', suggest: suggestExactVersion },
+  { re: /^\s*latest\s*$/, reason: 'floating "latest" tag', suggest: suggestExactVersion },
+  { re: /\.\s*[xX*](?:\.|$)/, reason: 'x-range (e.g. 1.x)', suggest: suggestExactVersion },
+  { re: /^\s*[xX]\b/, reason: 'standalone x-range', suggest: suggestExactVersion },
+  { re: /\|\|/, reason: 'OR range', suggest: suggestExactVersion },
   // git deps: mutable branch name after # (master, main, HEAD, common dev branches)
-  { re: /#(master|main|HEAD|develop|dev|next|trunk)\b/, reason: 'mutable git branch ref' },
+  { re: /#(master|main|HEAD|develop|dev|next|trunk)\b/, reason: 'mutable git branch ref', suggest: suggestCommitSha },
   // git deps: no # fragment at all — npm defaults to the default branch (mutable)
-  { re: /^(git\+https?:|git\+ssh:|git:\/\/|git@|github:|gitlab:|bitbucket:)[^#]*$/, reason: 'unpinned git source (no commit ref)' },
+  { re: /^(git\+https?:|git\+ssh:|git:\/\/|git@|github:|gitlab:|bitbucket:)[^#]*$/, reason: 'unpinned git source (no commit ref)', suggest: suggestCommitSha },
 ];
 
 function safeDecode(s) {
@@ -44,11 +55,10 @@ const PROTOCOLS = [
   },
 ];
 
-function getViolationReason(v) {
+function findViolatedRule(v) {
   const proto = PROTOCOLS.find(p => p.match(v));
-  if (proto) return getViolationReason(proto.resolve(v)); // classify the inner selector
-  const rule = RULES.find(r => r.re.test(v));             // normal dependency
-  return rule ? rule.reason : null;
+  if (proto) return findViolatedRule(proto.resolve(v)); // classify the inner selector
+  return RULES.find(r => r.re.test(v));                  // normal dependency
 }
 
 function checkFile(filePath, { checkPeer = false, checkOptional = true } = {}) {
@@ -59,9 +69,10 @@ function checkFile(filePath, { checkPeer = false, checkOptional = true } = {}) {
     ...(checkPeer ? Object.entries(pkg.peerDependencies || {}) : []),
     ...(checkOptional ? Object.entries(pkg.optionalDependencies || {}) : []),
   ];
-  return entries
-    .filter(([, v]) => getViolationReason(String(v)) !== null)
-    .map(([name, version]) => ({ name, version, reason: getViolationReason(String(version)) }));
+  return entries.flatMap(([name, version]) => {
+    const rule = findViolatedRule(String(version));
+    return rule ? [{ name, version, reason: rule.reason, suggestion: rule.suggest(String(version)) }] : [];
+  });
 }
 
 module.exports = { checkFile };
