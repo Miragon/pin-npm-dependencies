@@ -1,33 +1,24 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { findPackageJsonFiles } = require('./find.js');
+const { ManifestLocator, InputError } = require('./locator.js');
 const { PinPolicy } = require('./policy.js');
 
-function resolveFiles({ files, rootPath, workspace }) {
-  if (files) {
-    return { files: files.split(/\r?\n/).map(f => f.trim()).filter(Boolean).map(f => path.resolve(workspace, f)) };
-  }
-  const resolvedRoot = path.resolve(workspace, rootPath);
-  let stat;
-  try { stat = fs.statSync(resolvedRoot); } catch {
-    return { error: `::error::root-path does not exist: ${resolvedRoot}` };
-  }
-  if (!stat.isDirectory()) {
-    return { error: `::error::root-path must be a directory, got: ${resolvedRoot}` };
-  }
-  return { files: findPackageJsonFiles(resolvedRoot) };
-}
-
 function run({ files: filesInput = '', rootPath = '.', checkPeer = false, checkOptional = true, workspace }) {
-  const { files, error } = resolveFiles({ files: filesInput, rootPath, workspace });
-  if (error) return { lines: [error], exitCode: 1 };
+  let located;
+  try {
+    located = new ManifestLocator({ workspace, files: filesInput, rootPath }).locate();
+  } catch (error) {
+    if (error instanceof InputError) return { lines: [`::error::${error.message}`], exitCode: 1 };
+    throw error;
+  }
+  const { files, warnings } = located;
 
   if (files.length === 0) {
     return { lines: ['::warning::No package.json files found.'], exitCode: 0 };
   }
 
-  const lines = [];
+  const lines = warnings.map(warning => `::warning::${warning}`);
   let violations = 0;
   for (const file of files) {
     const rel = path.relative(workspace, file);
