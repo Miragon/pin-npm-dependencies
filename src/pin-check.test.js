@@ -4,9 +4,15 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { run } = require('./run.js');
+const { ActionInputs } = require('./inputs.js');
+const { PinCheck } = require('./pin-check.js');
 
-describe('run', () => {
+function run(options) {
+  const report = new PinCheck(new ActionInputs(options)).run();
+  return { lines: report.toLines(), exitCode: report.exitCode };
+}
+
+describe('PinCheck', () => {
   let workspace;
 
   function writePkg(relPath, raw) {
@@ -62,6 +68,13 @@ describe('run', () => {
     const { lines, exitCode } = run({ workspace });
     assert.equal(exitCode, 1);
     assert.ok(lines.some(l => l.startsWith('::error file=package.json::Could not parse package.json')));
+  });
+
+  it('counts unreadable files separately from unpinned versions', () => {
+    writePkg('package.json', '{broken json');
+    writePkg('app/package.json', { dependencies: { foo: '^1.0.0' } });
+    const { lines } = run({ workspace });
+    assert.equal(lines.at(-1), '\n1 unpinned version(s), 1 unreadable file(s) found. Use exact versions (e.g. "1.2.3" not "^1.2.3").');
   });
 
   it('passes the peer and optional flags through', () => {

@@ -32,6 +32,6 @@ GitHub turns each line into an annotation on the file. A file without findings p
 | `0` | every dependency is pinned | `✓ All dependencies across <n> file(s) are pinned.` |
 | `0` | no `package.json` found | `::warning::No package.json files found.` |
 | `1` | at least one finding | `<n> unpinned version(s) found. …` |
-| `1` | a file is not valid JSON or does not exist | `<n> unpinned version(s) found. …`, the file counts as one, with `::error file=<path>::Could not parse package.json: …` before it |
+| `1` | a file is not valid JSON or does not exist | `<n> unreadable file(s) found. …` (after any unpinned count), with `::error file=<path>::Could not parse package.json: …` before it |
 | `1` | `root-path` does not exist | `::error::root-path does not exist: <path>` |
 | `1` | `root-path` is a file | `::error::root-path must be a directory, got: <path>` |
