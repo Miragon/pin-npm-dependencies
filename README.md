@@ -4,6 +4,8 @@ A GitHub Action that fails the build if any dependency in `package.json` is not 
 
 Works with **npm, yarn, and pnpm**.
 
+![A pull request adds chart.js with a caret range, the check fails with an annotation on that line, and after pinning it to 4.4.1 the check passes and the merge unlocks](docs/assets/demo.gif)
+
 ## The risk: version ranges are a supply chain attack surface
 
 When you write `"axios": "^1.7.2"`, you're not installing axios 1.7.2. You're installing *the latest `1.x` release at the time `npm install` runs* — and that can differ across developer machines, CI runs, and deployments. That gap is exactly what attackers can exploit.
