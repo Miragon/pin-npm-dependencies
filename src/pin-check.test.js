@@ -4,9 +4,15 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { run } = require('./run.js');
+const { ActionInputs } = require('./inputs.js');
+const { PinCheck } = require('./pin-check.js');
 
-describe('run', () => {
+function run(options) {
+  const report = new PinCheck(new ActionInputs(options)).run();
+  return { lines: report.toLines(), exitCode: report.exitCode };
+}
+
+describe('PinCheck', () => {
   let workspace;
 
   function writePkg(relPath, raw) {
