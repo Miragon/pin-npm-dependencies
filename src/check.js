@@ -1,5 +1,4 @@
 'use strict';
-const fs = require('fs');
 
 function suggestExactVersion(version) {
   const stripped = version.replace(/^[\^~>=<\s]+/, '').replace(/\s*\|\|.*$/, '').trim();
@@ -61,8 +60,7 @@ function findViolatedRule(v) {
   return RULES.find(r => r.re.test(v));                  // normal dependency
 }
 
-function checkFile(filePath, { checkPeer = false, checkOptional = true } = {}) {
-  const pkg = JSON.parse(fs.readFileSync(filePath, 'utf8')); // throws on bad JSON
+function checkManifest(pkg, { checkPeer = false, checkOptional = true } = {}) {
   const entries = [
     ...Object.entries(pkg.dependencies || {}),
     ...Object.entries(pkg.devDependencies || {}),
@@ -75,4 +73,4 @@ function checkFile(filePath, { checkPeer = false, checkOptional = true } = {}) {
   });
 }
 
-module.exports = { checkFile };
+module.exports = { checkManifest };
