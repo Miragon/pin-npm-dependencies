@@ -2,7 +2,8 @@
 
 class PinReport {
   #lines = [];
-  #violationCount = 0;
+  #unpinnedCount = 0;
+  #unreadableCount = 0;
   #fileCount = 0;
   #inputError = null;
 
@@ -21,18 +22,18 @@ class PinReport {
     for (const { name, version, reason, suggestion } of violations) {
       this.#lines.push(`::error file=${relativePath}::${name}: "${version}" — ${reason}; ${suggestion}`);
     }
-    this.#violationCount += violations.length;
+    this.#unpinnedCount += violations.length;
     if (!violations.length) this.#lines.push(`  ✓ ${relativePath}`);
   }
 
   addUnreadableFile(relativePath, message) {
     this.#startFile(relativePath);
     this.#lines.push(`::error file=${relativePath}::Could not parse package.json: ${message}`);
-    this.#violationCount++;
+    this.#unreadableCount++;
   }
 
   get exitCode() {
-    return this.#inputError || this.#violationCount > 0 ? 1 : 0;
+    return this.#inputError || this.#hasFailures() ? 1 : 0;
   }
 
   toLines() {
@@ -46,9 +47,16 @@ class PinReport {
     this.#lines.push(`Checking "${relativePath}" for pinned versions...`);
   }
 
+  #hasFailures() {
+    return this.#unpinnedCount + this.#unreadableCount > 0;
+  }
+
   #summary() {
-    if (this.#violationCount === 0) return `\n✓ All dependencies across ${this.#fileCount} file(s) are pinned.`;
-    return `\n${this.#violationCount} unpinned version(s) found. Use exact versions (e.g. "1.2.3" not "^1.2.3").`;
+    if (!this.#hasFailures()) return `\n✓ All dependencies across ${this.#fileCount} file(s) are pinned.`;
+    const failures = [];
+    if (this.#unpinnedCount) failures.push(`${this.#unpinnedCount} unpinned version(s)`);
+    if (this.#unreadableCount) failures.push(`${this.#unreadableCount} unreadable file(s)`);
+    return `\n${failures.join(', ')} found. Use exact versions (e.g. "1.2.3" not "^1.2.3").`;
   }
 }
 

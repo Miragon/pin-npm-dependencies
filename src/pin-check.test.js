@@ -70,6 +70,13 @@ describe('PinCheck', () => {
     assert.ok(lines.some(l => l.startsWith('::error file=package.json::Could not parse package.json')));
   });
 
+  it('counts unreadable files separately from unpinned versions', () => {
+    writePkg('package.json', '{broken json');
+    writePkg('app/package.json', { dependencies: { foo: '^1.0.0' } });
+    const { lines } = run({ workspace });
+    assert.equal(lines.at(-1), '\n1 unpinned version(s), 1 unreadable file(s) found. Use exact versions (e.g. "1.2.3" not "^1.2.3").');
+  });
+
   it('passes the peer and optional flags through', () => {
     writePkg('package.json', { peerDependencies: { p: '^1.0.0' }, optionalDependencies: { o: '^1.0.0' } });
     assert.equal(run({ workspace, checkOptional: false }).exitCode, 0);
