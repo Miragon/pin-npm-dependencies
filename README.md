@@ -4,7 +4,7 @@
 [![Test](https://github.com/Miragon/pin-npm-dependencies/actions/workflows/test.yml/badge.svg)](https://github.com/Miragon/pin-npm-dependencies/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/github/license/Miragon/pin-npm-dependencies)](LICENSE)
 
-![Pin npm deps, a GitHub Action: every version, on purpose. Next to the claim, a run of the action fails on a caret range and a git branch in package.json](docs/assets/cover.png)
+![Pin npm packages, a GitHub Action: every version, on purpose. Next to the claim, a run of the action fails on a caret range and a git branch in package.json](docs/assets/cover.png)
 
 A GitHub Action for npm, yarn and pnpm that fails the pull request when a `package.json` uses a version range, `latest` or a git branch instead of an exact version.
 
