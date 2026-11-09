@@ -5,13 +5,20 @@
       "id": "pin-npm-dependencies",
       "target": "web",
       "label": "GitHub Action",
-      "title": "Pin npm Dependencies",
+      "title": "Pin npm deps",
       "claim": "Every version, on purpose.",
       "icon": "docs/public/logo/miragon-komet-blau.svg",
       "out": "docs/assets",
-      "web": { "url": "https://miragon.github.io/pin-npm-dependencies/" },
+      "web": {
+        "url": "https://miragon.github.io/pin-npm-dependencies/",
+        "viewport": "1600x1200"
+      },
       "shots": {
-        "hero": { "path": "./", "journey": ".miragon/journeys/failed-run.mjs", "selector": ".window" }
+        "hero": {
+          "path": "./",
+          "journey": ".miragon/journeys/failed-run.mjs",
+          "selector": ".window"
+        }
       }
     }
   ]
