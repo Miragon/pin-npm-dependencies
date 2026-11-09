@@ -4,9 +4,7 @@
 [![Test](https://github.com/Miragon/pin-npm-dependencies/actions/workflows/test.yml/badge.svg)](https://github.com/Miragon/pin-npm-dependencies/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/github/license/Miragon/pin-npm-dependencies)](LICENSE)
 
-![A pull request adds chart.js with a caret range, the check fails with an annotation on that line, and after pinning it to 4.4.1 the check passes and the merge unlocks](docs/assets/demo.gif)
-
-**Every dependency version in your pull requests, on purpose.**
+![Pin npm Dependencies, a GitHub Action: every version, on purpose. Next to the claim, a run of the action fails on a caret range and a git branch in package.json](docs/assets/cover.png)
 
 A GitHub Action for npm, yarn and pnpm that fails the pull request when a `package.json` uses a version range, `latest` or a git branch instead of an exact version.
 
@@ -22,6 +20,8 @@ A GitHub Action for npm, yarn and pnpm that fails the pull request when a `packa
 - **Whole monorepos in one step.** Every `package.json` outside `node_modules`, `.git`, `dist` and `build`, or one package, or a list of files ([Monorepos](https://miragon.github.io/pin-npm-dependencies/monorepos)).
 - **One required check across repositories.** Report first, pin, then enforce ([Roll out](https://miragon.github.io/pin-npm-dependencies/rollout)).
 - **Nothing leaves the runner.** No network request, no token, no changed files.
+
+![A pull request adds chart.js with a caret range, the check fails with an annotation on that line, and after pinning it to 4.4.1 the check passes and the merge unlocks](docs/assets/demo.gif)
 
 ## Install
 
