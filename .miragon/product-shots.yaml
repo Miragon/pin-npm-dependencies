@@ -1,0 +1,19 @@
+# miragon-brand/product-shots: neu erzeugen mit listing.mjs, Bilder nie von Hand ändern
+# Cover und Galerie der Store-Seiten dieses Repos. Pfade sind relativ zum Repo.
+skillVersion: 1.29.0
+products:
+  - id: pin-npm-dependencies
+    target: web
+    label: GitHub Action
+    title: Pin your libraries
+    claim: Every version, on purpose.
+    icon: docs/public/logo/miragon-komet-blau.svg
+    out: docs/assets
+    web:
+      url: https://miragon.github.io/pin-npm-dependencies/
+      viewport: 3400x1900
+    shots:
+      hero:
+        path: ./
+        journey: .miragon/journeys/failed-run.mjs
+        selector: .window
